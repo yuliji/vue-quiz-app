@@ -41,6 +41,10 @@
       >
         <h2>{{ questions[currentQuestionIndex].text | decodeHtml }}</h2>
         <div class="answers-container">
+          <div>
+            {{ questions[currentQuestionIndex].text | decodeHtml }}
+            <img :src="questions[currentQuestionIndex].img" alt="Example Image">
+          </div>
           <div
             class="answer answer--option"
             v-for="(answer, index) in questions[currentQuestionIndex].answers"
@@ -127,32 +131,42 @@ export default {
   methods: {
     // Fetch the Open Trivia DB categories
     init() {
-      const url = 'https://opentdb.com/api_category.php';
+      // const url = 'https://opentdb.com/api_category.php';
 
-      axios
-        .get(url)
-        .then((response) => {
-          // If results not returned successfully
-          if (
-            response.data.trivia_categories == null ||
-            !response.data.trivia_categories.length
-          ) {
-            return Promise.reject(response);
-          }
+      // axios
+      //   .get(url)
+      //   .then((response) => {
+      //     // If results not returned successfully
+      //     if (
+      //       response.data.trivia_categories == null ||
+      //       !response.data.trivia_categories.length
+      //     ) {
+      //       return Promise.reject(response);
+      //     }
 
-          this.categories = response.data.trivia_categories;
+      //     this.categories = response.data.trivia_categories;
 
-          // Remove extra categorisation from long category names
-          this.categories.forEach((category) => {
-            category.name = category.name.replace(/\w+: /gi, '');
-          });
-        })
-        .catch((error) => {
-          console.log(error);
-          alert(
-            'Sorry, something went wrong trying to load the categories. Please try again.'
-          );
-        });
+      //     // Remove extra categorisation from long category names
+      //     this.categories.forEach((category) => {
+      //       category.name = category.name.replace(/\w+: /gi, '');
+      //     });
+      //   })
+      //   .catch((error) => {
+      //     console.log(error);
+      //     alert(
+      //       'Sorry, something went wrong trying to load the categories. Please try again.'
+      //     );
+      //   });
+      this.categories = [
+        {
+          id: 1,
+          name: "maths"
+        },
+        {
+          id: 2,
+          name: "thinking skills"
+        }
+      ]
     },
     // Update the chosen category
     setCategory(category) {
@@ -164,19 +178,20 @@ export default {
     },
     // Fetch question data from Open Trivia DB and call populateQuestions()
     startQuiz() {
-      const url = this.generateUrl();
+      const url = 'http://127.0.0.1:5000/questions';
 
       this.isStarted = true;
 
       axios
         .get(url)
         .then((response) => {
+          console.log(response);
           // If results not returned successfully
-          if (response.data.response_code != 0) {
+          if (response.status != 200) {
             return Promise.reject(response);
           }
 
-          this.populateQuestions(response.data.results);
+          this.populateQuestions(response.data);
         })
         .catch((error) => {
           console.log(error);
@@ -184,6 +199,33 @@ export default {
             'Sorry, something went wrong trying to load the questions. Please try again.'
           );
         });
+
+
+      // const questions = [
+      // {
+      //   category: "Vehicles",
+      //   type: "boolean",
+      //   difficulty: "medium",
+      //   question: "The Japanese Shinkansen beat the French TGV&#039;s speed record for fastest electric rail train.",
+      //   correct_answer: "False",
+      //   incorrect_answers: [
+      //     "True"
+      //   ]
+      // },
+      // {
+      //   category: "Entertainment: Video Games",
+      //   type: "multiple",
+      //   difficulty: "medium",
+      //   question: "In what year were achivements added to Steam?",
+      //   correct_answer: "2007",
+      //   incorrect_answers: [
+      //     "2008",
+      //     "2009",
+      //     "2006"
+      //   ]
+      // },
+      // ]
+      // this.populateQuestions(questions);
     },
     // Create the Open Trivia DB URL with the chosen parameters
     generateUrl() {
@@ -216,7 +258,8 @@ export default {
 
             answers.push(answerObject);
           });
-
+          console.log(questionData);
+          newQuestion.img = questionData.img;
           newQuestion.text = questionData.question;
           newQuestion.answers = this.shuffle(answers);
           this.questions.push(newQuestion);
